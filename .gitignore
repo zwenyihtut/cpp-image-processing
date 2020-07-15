@@ -1,0 +1,5 @@
+images/
+bin/
+*.png
+build/
+test.py
