@@ -1,32 +1,31 @@
 #pragma once
+#include "convolute.hpp"
 #include "pixels.hpp"
 
 std::array<Image<DoublePixel, DoubleBuffer>, 2> sobelGetXandYIntensities(
     const Image<PixelG8>& img) {
-  Matrix<3, 3> sobelXKernal = { { { 1, 0, -1 }, { 2, 0, -2 }, { 1, 0, -1 } } };
-  Matrix<3, 3> sobelYKernal = { { { -1, -2, -1 }, { 0, 0, 0 }, { 1, 2, 1 } } };
+  Mat<double> sobelXKernal = { { 3, 3 }, { 1, 0, -1, 2, 0, -2, 1, 0, -1 } };
+  Mat<double> sobelYKernal = { { 3, 3 }, { -1, -2, -1, 0, 0, 0, 1, 2, 1 } };
 
   Image<DoublePixel, DoubleBuffer> xBuffer(img.width(), img.height());
   Image<DoublePixel, DoubleBuffer> yBuffer(img.width(), img.height());
 
-  filterToBuffer(img, sobelXKernal, xBuffer);
-  filterToBuffer(img, sobelYKernal, yBuffer);
+  convoluteToBuffer(img, sobelXKernal, xBuffer);
+  convoluteToBuffer(img, sobelYKernal, yBuffer);
 
   return { std::move(xBuffer), std::move(yBuffer) };
 }
 
 std::pair<SingleValueBuffer, SingleValueBuffer> intensityMap(
     const Image<PixelG8>& img) {
-  Matrix<3, 3> sobelXKernal = { { { 1, 0, -1 }, { 2, 0, -2 }, { 1, 0, -1 } } };
-  // Y kernal is inverted along x-axis because of the way the pixels are indiced
-  // along the y-axis
-  Matrix<3, 3> sobelYKernal = { { { -1, -2, -1 }, { 0, 0, 0 }, { 1, 2, 1 } } };
+  Mat<double> sobelXKernal = { { 3, 3 }, { 1, 0, -1, 2, 0, -2, 1, 0, -1 } };
+  Mat<double> sobelYKernal = { { 3, 3 }, { -1, -2, -1, 0, 0, 0, 1, 2, 1 } };
 
   Image<DoublePixel, DoubleBuffer> xBuffer(img.width(), img.height());
   Image<DoublePixel, DoubleBuffer> yBuffer(img.width(), img.height());
 
-  filterToBuffer(img, sobelXKernal, xBuffer);
-  filterToBuffer(img, sobelYKernal, yBuffer);
+  convoluteToBuffer(img, sobelXKernal, xBuffer);
+  convoluteToBuffer(img, sobelYKernal, yBuffer);
 
   SingleValueBuffer intensities(img.width(), img.height(), 0);
   SingleValueBuffer directions(img.width(), img.height(), 0);
@@ -46,14 +45,14 @@ std::pair<SingleValueBuffer, SingleValueBuffer> intensityMap(
 }
 
 Image<PixelG8> sobel(const Image<PixelG8>& img) {
-  Matrix<3, 3> sobelXKernal = { { { 1, 0, -1 }, { 2, 0, -2 }, { 1, 0, -1 } } };
-  Matrix<3, 3> sobelYKernal = { { { 1, 2, 1 }, { 0, 0, 0 }, { -1, -2, -1 } } };
+  Mat<double> sobelXKernal = { { 3, 3 }, { 1, 0, -1, 2, 0, -2, 1, 0, -1 } };
+  Mat<double> sobelYKernal = { { 3, 3 }, { -1, -2, -1, 0, 0, 0, 1, 2, 1 } };
 
   Image<DoublePixel, DoubleBuffer> xBuffer(img.width(), img.height());
   Image<DoublePixel, DoubleBuffer> yBuffer(img.width(), img.height());
 
-  filterToBuffer(img, sobelXKernal, xBuffer);
-  filterToBuffer(img, sobelYKernal, yBuffer);
+  convoluteToBuffer(img, sobelXKernal, xBuffer);
+  convoluteToBuffer(img, sobelYKernal, yBuffer);
 
   Image<PixelG8> ret(img.width(), img.height());
 
@@ -65,4 +64,3 @@ Image<PixelG8> sobel(const Image<PixelG8>& img) {
   }
   return ret;
 }
-

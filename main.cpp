@@ -12,7 +12,6 @@ extern "C" {
 #include <unordered_map>
 #include "hhs/logger.h"
 
-#include "filters.hpp"
 #include "flatten.hpp"
 #include "image.hpp"
 #include "image_traverser.hpp"
@@ -38,14 +37,15 @@ void run(const std::string& filename) {
             << "Image resolution: " << img.info() << std::endl;
 
   Image<PixelG8> gs = grayscale(img);
+  gs.buffer()->save("gray.png");
   harris(gs).buffer()->save("harris.png");
-  //gs.buffer()->save("gray.png");
-  auto blurred = gaussian(gs);
-  blurred.buffer()->save("gauss.png");
+
+  auto blurred = blur(gs);
+  blurred.buffer()->save("blur.png");
   auto gauss = canny(blurred);
-  //auto sbl = sobel(blurred);
-  //sbl.buffer()->save("sobel.png");
-  //gauss.buffer()->save("canny.png");
+  auto sbl = sobel(blurred);
+  sbl.buffer()->save("sobel.png");
+  gauss.buffer()->save("canny.png");
 }
 
 int main(int argc, char** argv) {

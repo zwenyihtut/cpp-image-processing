@@ -1,5 +1,6 @@
 #pragma once
 #include "typedefs.hpp"
+#include "convolute.hpp"
 
 namespace {
 template <typename RGBImage>
@@ -100,9 +101,17 @@ Image copy(const Image& img) {
 
 template <typename Image>
 Image blur(const Image& img) {
-  auto generator = [](unsigned, unsigned) constexpr { return 1.0 / (5 * 5); };
-  constexpr auto blurMatrix = generateMatrix<5>(generator);
-  return filter(img, blurMatrix);
+  constexpr unsigned KERNAL_SIDE_LENGTH = 9;
+  constexpr unsigned KERNAL_TOTAL_ELEMS =
+      KERNAL_SIDE_LENGTH * KERNAL_SIDE_LENGTH;
+
+  constexpr double KERNAL_WEIGHT = 1.0 / KERNAL_TOTAL_ELEMS;
+
+  Mat<double> blurKernal(
+      { KERNAL_SIDE_LENGTH, KERNAL_SIDE_LENGTH },
+      std::vector<double>(KERNAL_TOTAL_ELEMS, KERNAL_WEIGHT));
+
+  return convolute(img, blurKernal);
 }
 
 template <typename Image>
@@ -118,8 +127,8 @@ Image gaussian(const Image& img) {
 
   for (int i = 0; i < 1; ++i) {
     Image buffer(ret.width(), ret.height());
-    filterToBuffer(ret, gaussianColVector, buffer);
-    filterToBuffer(buffer.clone(), gaussianRowVector, buffer);
+    convoluteToBuffer(ret, gaussianColVector, buffer);
+    convoluteToBuffer(buffer.clone(), gaussianRowVector, buffer);
     ret = buffer.clone();
   }
   return ret;

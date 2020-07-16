@@ -1,5 +1,5 @@
 #pragma once
-#include "matrix.hpp"
+#include "mat.hpp"
 
 /**
  * Convolutes a given image with a kernal, and puts into a given buffer.
@@ -11,8 +11,6 @@
  *
  * @tparam Image Input image type
  * @tparam Buffer Output buffer type
- * @tparam ROWS Kernal height
- * @tparam COLS Kernal width
  *
  * @param img Input image
  * @param kernal Kernal to use for convolution
@@ -20,13 +18,9 @@
  *
  * @returns void
  */
-template <typename Image,
-          typename Buffer,
-          long unsigned ROWS,
-          long unsigned COLS>
-void filterToBuffer(const Image& img,
-                    const Matrix<ROWS, COLS>& kernal,
-                    Buffer& buffer);
+template <typename Image, typename Buffer>
+void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
+                    Buffer &buffer);
 
 /**
  * Convolutes a given image with a kernal, returning an Image of the same type.
@@ -37,16 +31,14 @@ void filterToBuffer(const Image& img,
  *
  *
  * @tparam Image Input image type
- * @tparam ROWS Kernal height
- * @tparam COLS Kernal width
  *
  * @param img Input image
  * @param kernal Kernal to use for convolution
  *
  * @returns The convolved image
  */
-template <typename Image, long unsigned ROWS, long unsigned COLS>
-Image filter(const Image& img, const Matrix<ROWS, COLS>& kernal);
+template <typename Image>
+Image convolute(const Image &img, const Mat<double> &kernal);
 
 /**
  * Convolutes a given image with a kernal, and puts into a given buffer.
@@ -56,8 +48,6 @@ Image filter(const Image& img, const Matrix<ROWS, COLS>& kernal);
  *
  * @tparam Image Input image type
  * @tparam Buffer Output buffer type
- * @tparam ROWS Kernal height
- * @tparam COLS Kernal width
  *
  * @param img Input image
  * @param kernal Kernal to use for convolution
@@ -65,13 +55,9 @@ Image filter(const Image& img, const Matrix<ROWS, COLS>& kernal);
  *
  * @returns void
  */
-template <typename Image,
-          typename Buffer,
-          long unsigned ROWS,
-          long unsigned COLS>
-void filterToBufferUnchecked(const Image& img,
-                             const Matrix<ROWS, COLS>& kernal,
-                             Buffer& buffer);
+template <typename Image, typename Buffer>
+void convoluteToBufferUnchecked(const Image &img, const Mat<double> &kernal,
+                             Buffer &buffer);
 
 /**
  * Convolutes a given image with a kernal, returning an Image of the same type.
@@ -81,31 +67,27 @@ void filterToBufferUnchecked(const Image& img,
  *
  *
  * @tparam Image Input image type
- * @tparam ROWS Kernal height
- * @tparam COLS Kernal width
  *
  * @param img Input image
  * @param kernal Kernal to use for convolution
  *
  * @returns The convolved image
  */
-template <typename Image, long unsigned ROWS, long unsigned COLS>
-Image filterUnchecked(const Image& img, const Matrix<ROWS, COLS>& kernal);
+template <typename Image>
+Image convoluteUnchecked(const Image &img, const Mat<double> &kernal);
 
 //----------------------- implementations --------------------------------
-template <typename Image,
-          typename Buffer,
-          long unsigned ROWS,
-          long unsigned COLS>
-void filterToBuffer(const Image& img,
-                    const Matrix<ROWS, COLS>& kernal,
-                    Buffer& buffer) {
+template <typename Image, typename Buffer>
+void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
+                    Buffer &buffer) {
   const auto W = img.width();
   const auto H = img.height();
 
   constexpr auto CHANNELS = Image::pixel_t::CHANNELS;
-  constexpr auto HALF_ROWS = ROWS / 2;
-  constexpr auto HALF_COLS = COLS / 2;
+  const auto ROWS = kernal.dimension(0);
+  const auto COLS = kernal.dimension(1);
+  const auto HALF_ROWS = ROWS / 2;
+  const auto HALF_COLS = COLS / 2;
 
   // If index is over the bound, turn it over the mirror
   const auto adjusted = [](int index, int end) -> int {
@@ -132,27 +114,25 @@ void filterToBuffer(const Image& img,
   }
 }
 
-template <typename Image, long unsigned ROWS, long unsigned COLS>
-Image filter(const Image& img, const Matrix<ROWS, COLS>& kernal) {
+template <typename Image>
+Image convolute(const Image &img, const Mat<double> &kernal) {
   const auto W = img.width();
   const auto H = img.height();
 
   Image buffer(W, H);
-  filterToBuffer(img, kernal, buffer);
+  convoluteToBuffer(img, kernal, buffer);
   return buffer;
 }
 
-template <typename Image,
-          typename Buffer,
-          long unsigned ROWS,
-          long unsigned COLS>
-void filterToBufferUnchecked(const Image& img,
-                             const Matrix<ROWS, COLS>& kernal,
-                             Buffer& buffer) {
+template <typename Image, typename Buffer>
+void convoluteToBufferUnchecked(const Image &img, const Mat<double> &kernal,
+                             Buffer &buffer) {
   const auto W = img.width();
   const auto H = img.height();
 
   constexpr auto CHANNELS = Image::pixel_t::CHANNELS;
+  const auto ROWS = kernal.dimension(0);
+  const auto COLS = kernal.dimension(1);
   constexpr auto HALF_ROWS = ROWS / 2;
   constexpr auto HALF_COLS = COLS / 2;
 
@@ -180,12 +160,12 @@ void filterToBufferUnchecked(const Image& img,
   }
 }
 
-template <typename Image, long unsigned ROWS, long unsigned COLS>
-Image filterUnchecked(const Image& img, const Matrix<ROWS, COLS>& kernal) {
+template <typename Image>
+Image convoluteUnchecked(const Image &img, const Mat<double> &kernal) {
   const auto W = img.width();
   const auto H = img.height();
 
   Image buffer(W, H);
-  filterToBufferUnchecked(img, kernal, buffer);
+  convoluteToBufferUnchecked(img, kernal, buffer);
   return buffer;
 }
