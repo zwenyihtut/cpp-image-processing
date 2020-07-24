@@ -20,7 +20,7 @@ public:
       mSize *= sz;
     }
   }
-
+  
   Element operator()(std::initializer_list<unsigned> indices) const {
     assert(indices.size() == mDimensions.size());
     unsigned index = 0;
@@ -31,9 +31,17 @@ public:
     }
     return mElements[index];
   }
+  
+  Element operator()(unsigned index) const {
+    return mElements[index];
+  }
+
+  void operator()(unsigned index, const Element& value) {
+    mElements[index] = value;
+  }
 
   Mat &operator=(const std::initializer_list<Element> &other) {
-    assert(mElements.size() == other.size(i));
+    assert(mElements.size() == other.size());
     unsigned i = 0;
     for (const auto &v : other) {
       mElements[i] = v;
@@ -53,7 +61,7 @@ public:
   }
 
   Mat &operator+=(const std::initializer_list<Element> &other) {
-    assert(mElements.size() == other.size(i));
+    assert(mElements.size() == other.size());
     unsigned i = 0;
     for (const auto &v : other) {
       mElements[i] += v;
@@ -144,7 +152,9 @@ public:
 
   MatView &operator=(const E &value) {
     assert(this->mCurrentDimension == 0);
-    this->mMatrix.mElements.at(this->mOffset + this->mIndex) = value;
+    const auto i = this->mOffset + this->mIndex;
+    std::cout << i << ' ';
+    this->mMatrix.mElements.at(i) = value;
     return *this;
   }
 
