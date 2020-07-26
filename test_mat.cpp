@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "mat.hpp"
 #include "img.hpp"
+#include "mat.hpp"
 
 TEST_CASE("Element get/set works", "[Mat]") {
   Mat<int> m({ 7 }, { 1, 2, 3, 4, 5, 6, 7 });
