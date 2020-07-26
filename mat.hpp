@@ -1,232 +1,188 @@
 #pragma once
 #include <array>
+#include <functional>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <vector>
 
-template <typename Element> class MatView;
-template <typename Element> class ConstMatView;
+template <typename Element>
+class MatView;
+template <typename Element>
+class ConstMatView;
 
-template <typename Element> class Mat {
-public:
+template <typename Element>
+class Mat {
+ public:
+  template <typename E, typename M, typename D>
+  friend class MatViewBase;
   friend class MatView<Element>;
   friend class ConstMatView<Element>;
 
-  Mat(const std::vector<unsigned> &dimensions) : Mat(dimensions, {}) {}
-  Mat(const std::vector<unsigned> &dimensions,
-      const std::vector<Element> &elements)
-      : mElements(elements), mDimensions(dimensions), mSize(1) {
-    for (unsigned sz : mDimensions) {
-      mSize *= sz;
-    }
-  }
-  
-  Element operator()(std::initializer_list<unsigned> indices) const {
-    assert(indices.size() == mDimensions.size());
-    unsigned index = 0;
-    unsigned i = 0;
-    for (const unsigned v : indices) {
-      index += mDimensions[i] * v;
-      ++i;
-    }
-    return mElements[index];
-  }
-  
-  Element operator()(unsigned index) const {
-    return mElements[index];
-  }
+  Mat(const std::vector<unsigned>& dimensions);
+  Mat(const std::vector<unsigned>& dimensions,
+      const std::vector<Element>& elements);
 
-  void operator()(unsigned index, const Element& value) {
-    mElements[index] = value;
-  }
+  Element operator()(std::initializer_list<unsigned> indices) const;
 
-  Mat &operator=(const std::initializer_list<Element> &other) {
-    assert(mElements.size() == other.size());
-    unsigned i = 0;
-    for (const auto &v : other) {
-      mElements[i] = v;
-      ++i;
-    }
-    return *this;
-  }
+  Element operator()(unsigned index) const;
+  void operator()(unsigned index, const Element& value);
 
-  Mat &operator+=(const Mat &other) {
-    for (unsigned i = 0; i < mDimensions.size(); ++i) {
-      assert(dimension(i) == other.dimension(i));
-    }
-    for (unsigned i = 0; i < mElements.size(); ++i) {
-      mElements[i] += other.mElements[i];
-    }
-    return *this;
-  }
+  Mat& operator=(const std::initializer_list<Element>& other);
 
-  Mat &operator+=(const std::initializer_list<Element> &other) {
-    assert(mElements.size() == other.size());
-    unsigned i = 0;
-    for (const auto &v : other) {
-      mElements[i] += v;
-      ++i;
-    }
-    return *this;
-  }
+  Mat& operator+=(const Mat& other);
+  Mat& operator+=(const std::initializer_list<Element>& other);
 
-  Mat operator+(const Mat &other) {
-    for (unsigned i = 0; i < mDimensions.size(); ++i) {
-      assert(dimension(i) == other.dimension(i));
-    }
+  Mat operator-(const Mat& other);
+  Mat operator+(const Mat& other);
 
-    std::vector<Element> outputElements(size());
-
-    for (unsigned i = 0; i < size(); ++i) {
-      outputElements[i] = mElements[i] + other.mElements[i];
-    }
-
-    return Mat(mDimensions, outputElements);
-  }
-
-  unsigned dimensions() const { return mDimensions.size(); }
-  Mat operator-(const Mat &other) {
-    for (unsigned i = 0; i < mDimensions.size(); ++i) {
-      assert(dimension(i) == other.dimension(i));
-    }
-
-    std::vector<Element> outputElements(size());
-
-    for (unsigned i = 0; i < size(); ++i) {
-      outputElements[i] = mElements[i] - other.mElements[i];
-    }
-
-    return Mat(mDimensions, outputElements);
-  }
+  unsigned dimensions() const;
 
   MatView<Element> operator[](unsigned index);
   ConstMatView<Element> operator[](unsigned index) const;
 
-  unsigned size() const { return mSize; }
-  unsigned dimension(unsigned index) const { return mDimensions[index]; }
+  unsigned size() const;
+  unsigned dimension(unsigned index) const;
 
-private:
+ private:
   std::vector<Element> mElements;
   const std::vector<unsigned> mDimensions;
+  std::vector<unsigned> mOffsetMultipliers;
   unsigned mSize;
 };
 
-template <typename E> class MatViewBase {
-public:
-  MatViewBase(Mat<E> &matrix, unsigned currentDimension, unsigned index,
-              unsigned offset)
-      : mMatrix(matrix), mCurrentDimension(currentDimension), mIndex(index),
-        mOffset(offset) {}
+#include "mat_view.hpp"
 
-protected:
-  Mat<E> &mMatrix;
-  unsigned mCurrentDimension;
-  unsigned mIndex;
-  unsigned mOffset;
-};
-
-template <typename E> class MatView : public MatViewBase<E> {
-public:
-  using MatViewBase<E>::MatViewBase;
-
-  MatView<E> operator[](unsigned index) {
-    checkRange(index);
-
-    unsigned stride = this->mMatrix.dimension(this->mCurrentDimension);
-    return MatView<E>(this->mMatrix, this->mCurrentDimension - 1, index,
-                      this->mOffset + this->mIndex * stride);
-  };
-
-  const MatView<E> operator[](unsigned index) const {
-    checkRange(index);
-
-    unsigned stride = this->mMatrix.dimension(this->mCurrentDimension);
-    return MatView<E>(this->mMatrix, this->mCurrentDimension - 1, index,
-                      this->mOffset + this->mIndex * stride);
-  };
-
-  operator E() const {
-    assert(this->mCurrentDimension == 0);
-    return this->mMatrix.mElements.at(this->mOffset + this->mIndex);
-  }
-
-  MatView &operator=(const E &value) {
-    assert(this->mCurrentDimension == 0);
-    const auto i = this->mOffset + this->mIndex;
-    std::cout << i << ' ';
-    this->mMatrix.mElements.at(i) = value;
-    return *this;
-  }
-
-private:
-  void checkRange(unsigned index) const {
-    if (index >= this->mMatrix.dimension(this->mMatrix.mDimensions.size() -
-                                         this->mCurrentDimension)) {
-      std::ostringstream errStream;
-      errStream << "Out of range access: index = " << index
-                << ", dimension length = "
-                << this->mMatrix.dimension(this->mMatrix.mDimensions.size() -
-                                           this->mCurrentDimension);
-      throw std::out_of_range(errStream.str());
-    }
-  }
-};
-
-template <typename E> class ConstMatViewBase {
-public:
-  ConstMatViewBase(const Mat<E> &matrix, unsigned currentDimension,
-                   unsigned index, unsigned offset)
-      : mMatrix(matrix), mCurrentDimension(currentDimension), mIndex(index),
-        mOffset(offset) {}
-
-protected:
-  const Mat<E> &mMatrix;
-  unsigned mCurrentDimension;
-  unsigned mIndex;
-  unsigned mOffset;
-};
-
-template <typename E> class ConstMatView : public ConstMatViewBase<E> {
-public:
-  using ConstMatViewBase<E>::ConstMatViewBase;
-
-  ConstMatView<E> operator[](unsigned index) const {
-    checkRange(index);
-
-    unsigned stride = this->mMatrix.dimension(this->mCurrentDimension);
-    return ConstMatView<E>(this->mMatrix, this->mCurrentDimension - 1, index,
-                           this->mOffset + this->mIndex * stride);
-  };
-
-  operator E() const {
-    assert(this->mCurrentDimension == 0);
-    return this->mMatrix.mElements.at(this->mOffset + this->mIndex);
-  }
-
-private:
-  void checkRange(unsigned index) const {
-    if (index >= this->mMatrix.dimension(this->mMatrix.mDimensions.size() -
-                                         this->mCurrentDimension)) {
-      std::ostringstream errStream;
-      errStream << "Out of range access: index = " << index
-                << ", dimension length = "
-                << this->mMatrix.dimension(this->mMatrix.mDimensions.size() -
-                                           this->mCurrentDimension);
-      throw std::out_of_range(errStream.str());
-    }
-  }
-};
-
-template <typename E> MatView<E> Mat<E>::operator[](unsigned index) {
+template <typename E>
+MatView<E> Mat<E>::operator[](unsigned index) {
   if (index > this->mDimensions[0]) {
     throw std::out_of_range("");
   }
-  return MatView<E>(*this, this->mDimensions.size() - 1, index, 0);
+  return MatView<E>(*this, 0, index, 0);
 };
 
-template <typename E> ConstMatView<E> Mat<E>::operator[](unsigned index) const {
+template <typename E>
+ConstMatView<E> Mat<E>::operator[](unsigned index) const {
   if (index > this->mDimensions[0]) {
     throw std::out_of_range("");
   }
-  return ConstMatView<E>(*this, this->mDimensions.size() - 1, index, 0);
+  return ConstMatView<E>(*this, 0, index, 0);
 };
+
+template <typename Element>
+Mat<Element>::Mat(const std::vector<unsigned>& dimensions) : Mat(dimensions, {}) {}
+
+template <typename Element>
+Mat<Element>::Mat(const std::vector<unsigned>& dimensions,
+    const std::vector<Element>& elements)
+    : mElements(elements),
+      mDimensions(dimensions),
+      mOffsetMultipliers(dimensions.size()),
+      mSize(1) {
+  for (unsigned sz : mDimensions) {
+    mSize *= sz;
+  }
+  mOffsetMultipliers.back() = 1;
+  std::inclusive_scan(mDimensions.rbegin(), mDimensions.rend() - 1,
+                      mOffsetMultipliers.rbegin() + 1, std::multiplies<int>());
+}
+
+template <typename Element>
+Element Mat<Element>::operator()(std::initializer_list<unsigned> indices) const {
+  assert(indices.size() == mDimensions.size());
+  unsigned index = 0;
+  unsigned i = 0;
+  for (const unsigned v : indices) {
+    index += mDimensions[i] * v;
+    ++i;
+  }
+  return mElements[index];
+}
+
+template <typename Element>
+Element Mat<Element>::operator()(unsigned index) const {
+  return mElements[index];
+}
+
+template <typename Element>
+void Mat<Element>::operator()(unsigned index, const Element& value) {
+  mElements[index] = value;
+}
+
+template <typename Element>
+Mat<Element>& Mat<Element>::operator=(const std::initializer_list<Element>& other) {
+  assert(mElements.size() == other.size());
+  unsigned i = 0;
+  for (const auto& v : other) {
+    mElements[i] = v;
+    ++i;
+  }
+  return *this;
+}
+
+template <typename Element>
+Mat<Element>& Mat<Element>::operator+=(const Mat& other) {
+  for (unsigned i = 0; i < mDimensions.size(); ++i) {
+    assert(dimension(i) == other.dimension(i));
+  }
+  for (unsigned i = 0; i < mElements.size(); ++i) {
+    mElements[i] += other.mElements[i];
+  }
+  return *this;
+}
+
+template <typename Element>
+Mat<Element>& Mat<Element>::operator+=(const std::initializer_list<Element>& other) {
+  assert(mElements.size() == other.size());
+  unsigned i = 0;
+  for (const auto& v : other) {
+    mElements[i] += v;
+    ++i;
+  }
+  return *this;
+}
+
+template <typename Element>
+Mat<Element> Mat<Element>::operator+(const Mat& other) {
+  for (unsigned i = 0; i < mDimensions.size(); ++i) {
+    assert(dimension(i) == other.dimension(i));
+  }
+
+  std::vector<Element> outputElements(size());
+
+  for (unsigned i = 0; i < size(); ++i) {
+    outputElements[i] = mElements[i] + other.mElements[i];
+  }
+
+  return Mat(mDimensions, outputElements);
+}
+
+template <typename Element>
+unsigned Mat<Element>::dimensions() const {
+  return mDimensions.size();
+}
+
+template <typename Element>
+Mat<Element> Mat<Element>::operator-(const Mat& other) {
+  for (unsigned i = 0; i < mDimensions.size(); ++i) {
+    assert(dimension(i) == other.dimension(i));
+  }
+
+  std::vector<Element> outputElements(size());
+
+  for (unsigned i = 0; i < size(); ++i) {
+    outputElements[i] = mElements[i] - other.mElements[i];
+  }
+
+  return Mat(mDimensions, outputElements);
+}
+
+template <typename Element>
+unsigned Mat<Element>::size() const {
+  return mSize;
+}
+
+template <typename Element>
+unsigned Mat<Element>::dimension(unsigned index) const {
+  return mDimensions[index];
+}
