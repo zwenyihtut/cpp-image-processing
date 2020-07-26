@@ -66,7 +66,7 @@ MatViewBase<E, M, D>::operator E() const {
 
 template <typename E>
 MatView<E>& MatView<E>::operator=(const E& value) {
-  assert(this->mCurrentDimension == 0);
+  assert(this->mCurrentDimension == this->mMatrix.mDimensions.size() - 1);
   const auto i = this->mOffset + this->mIndex;
   this->mMatrix.mElements.at(i) = value;
   return *this;
