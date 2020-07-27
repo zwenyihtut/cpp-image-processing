@@ -42,8 +42,9 @@ class ConstMatView : public MatViewBase<E, const Mat<E>, ConstMatView<E>> {
 
 template <typename E, typename M, typename D>
 D MatViewBase<E, M, D>::operator[](unsigned index) {
+#ifndef NDEBUG
   assertRange(index);
-
+#endif
   unsigned stride = this->mMatrix.mOffsetMultipliers[this->mCurrentDimension];
   return D(this->mMatrix, this->mCurrentDimension + 1, index,
                     this->mOffset + this->mIndex * stride);
@@ -51,7 +52,9 @@ D MatViewBase<E, M, D>::operator[](unsigned index) {
 
 template <typename E, typename M, typename D>
 const D MatViewBase<E, M, D>::operator[](unsigned index) const {
+#ifndef NDEBUG
   assertRange(index);
+#endif
 
   unsigned stride = this->mMatrix.mOffsetMultipliers[this->mCurrentDimension];
   return D(this->mMatrix, this->mCurrentDimension + 1, index,
