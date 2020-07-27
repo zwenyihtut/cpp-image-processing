@@ -60,6 +60,6 @@ TEST_CASE("Subtraction works", "[Mat]") {
 }
 
 TEST_CASE("read works", "[Mat]") {
-  auto m = read("./images/yellow.png");
+  auto m = img::read("./images/yellow.png");
   REQUIRE(m.dimensions() == 3);
 }
