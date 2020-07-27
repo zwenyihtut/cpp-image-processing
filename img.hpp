@@ -5,6 +5,21 @@
 #include "libpng_wrapper.hpp"
 #include "mat.hpp"
 
+namespace img {
+template <typename V>
+typename Mat<V>::size_type height(const Mat<V>& image) {
+  return image.dimension(0);
+}
+
+template <typename V>
+typename Mat<V>::size_type width(const Mat<V>& image) {
+  return image.dimension(1);
+}
+
+template <typename V>
+typename Mat<V>::size_type channel(const Mat<V>& image) {
+  return image.dimension(2);
+}
 Mat<uint8_t> read(const std::string& name) {
   auto img = libpng::read(name);
   const unsigned width = png_get_image_width(img.png, img.info);
@@ -38,7 +53,7 @@ Mat<uint8_t> read(const std::string& name) {
   return ret;
 }
 
-void write(const Mat<uint8_t>& image, const std::string& name) {
+void write(const Mat<uint8_t>& image, const std::string& name, int type = PNG_COLOR_TYPE_RGB) {
   auto pngPtr =
       png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
@@ -51,7 +66,7 @@ void write(const Mat<uint8_t>& image, const std::string& name) {
   const auto width = image.dimension(1);
   const auto channel = image.dimension(2);
 
-  libpng::HeaderChunk header = { width, height, PNG_COLOR_TYPE_RGB };
+  libpng::HeaderChunk header = { width, height, type };
   libpng::writeHeaderChunk(pngPtr, infoPtr, header);
 
   // Allocate buffer
@@ -79,3 +94,22 @@ void write(const Mat<uint8_t>& image, const std::string& name) {
   png_write_png(pngPtr, infoPtr, PNG_TRANSFORM_IDENTITY, NULL);
   fclose(file);
 }
+
+Mat<uint8_t> grayscale(const Mat<uint8_t>& image) {
+  const auto height = img::height(image);
+  const auto width = img::width(image);
+  const auto channel = std::min<unsigned>(img::channel(image), 3);
+  Mat<uint8_t> output = { { height, width, 1 } };
+
+  for (unsigned y = 0; y < height; ++y) {
+    for (unsigned x = 0; x < width; ++x) {
+      unsigned sum = 0;
+      for (unsigned c = 0; c < channel; ++c) {
+        sum += image[y][x][c];
+      }
+      output[y][x][0] = std::round(sum / 3.0);
+    }
+  }
+  return output;
+}
+}  // namespace img

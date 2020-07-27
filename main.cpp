@@ -23,6 +23,8 @@ extern "C" {
 #include "harris.hpp"
 #include "utility.hpp"
 
+#include "img.hpp"
+
 std::ostream& operator<<(std::ostream& os, const PixelRGB8& pixel) {
   os << "(" << (unsigned)pixel.red() << ", " << (unsigned)pixel.green() << ", "
      << (unsigned)pixel.blue() << ")";
@@ -48,12 +50,20 @@ void run(const std::string& filename) {
   gauss.buffer()->save("canny.png");
 }
 
+void run2(const Mat<uint8_t>& image) {
+  auto grayscaledImage = img::grayscale(image);
+  img::write(grayscaledImage, "grayscale.png", PNG_COLOR_TYPE_GRAY);
+}
+
 int main(int argc, char** argv) {
   if (argc != 2) {
     std::cout << "Usage: " << argv[0] << " <input>\n";
     return 1;
   }
 
+  auto image = img::read(argv[1]); 
+  run2(image);
+  return 0;
   std::shared_ptr<ImageFileBuffer> file(new ImageFileBuffer(argv[1]));
 
   if (file->colorType() == "RGBA") {
