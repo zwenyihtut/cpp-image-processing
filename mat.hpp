@@ -18,10 +18,23 @@ class Mat {
   friend class MatViewBase;
   friend class MatView<Element>;
   friend class ConstMatView<Element>;
+  
+  using index_t = MatView<Element>;
+  using const_index_t = ConstMatView<Element>;
+
+  using iterator = typename std::vector<Element>::iterator;
+  using const_iterator = typename std::vector<Element>::const_iterator;
+  using size_type = typename std::vector<Element>::size_type;
 
   Mat(const std::vector<unsigned>& dimensions);
   Mat(const std::vector<unsigned>& dimensions,
       const std::vector<Element>& elements);
+  
+  iterator begin() { return this->mElements.begin(); }
+  const_iterator cbegin() const { return this->mElements.cbegin(); }
+
+  iterator end() { return this->mElements.end(); }
+  const_iterator cend() const { return this->mElements.cend(); }
 
   Element operator()(std::initializer_list<unsigned> indices) const;
 
@@ -70,7 +83,9 @@ ConstMatView<E> Mat<E>::operator[](unsigned index) const {
 };
 
 template <typename Element>
-Mat<Element>::Mat(const std::vector<unsigned>& dimensions) : Mat(dimensions, {}) {}
+Mat<Element>::Mat(const std::vector<unsigned>& dimensions) : Mat(dimensions, {}) {
+  this->mElements = std::vector<Element>(this->size(), 0);
+}
 
 template <typename Element>
 Mat<Element>::Mat(const std::vector<unsigned>& dimensions,
