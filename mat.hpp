@@ -26,10 +26,10 @@ class Mat {
   using const_iterator = typename std::vector<Element>::const_iterator;
   using size_type = typename std::vector<Element>::size_type;
 
-  Mat(const std::vector<unsigned>& dimensions);
-  Mat(const std::vector<unsigned>& dimensions,
+  Mat(const std::vector<size_type>& dimensions);
+  Mat(const std::vector<size_type>& dimensions,
       const std::vector<Element>& elements);
-  
+
   iterator begin() { return this->mElements.begin(); }
   const_iterator cbegin() const { return this->mElements.cbegin(); }
 
@@ -42,7 +42,6 @@ class Mat {
   void operator()(unsigned index, const Element& value);
 
   Mat& operator=(const std::initializer_list<Element>& other);
-
   Mat& operator+=(const Mat& other);
   Mat& operator+=(const std::initializer_list<Element>& other);
 
@@ -54,12 +53,12 @@ class Mat {
   MatView<Element> operator[](unsigned index);
   ConstMatView<Element> operator[](unsigned index) const;
 
-  unsigned size() const;
-  unsigned dimension(unsigned index) const;
+  size_type size() const;
+  size_type dimension(unsigned index) const;
 
  private:
   std::vector<Element> mElements;
-  const std::vector<unsigned> mDimensions;
+  std::vector<size_type> mDimensions;
   std::vector<unsigned> mOffsetMultipliers;
   unsigned mSize;
 };
@@ -83,12 +82,12 @@ ConstMatView<E> Mat<E>::operator[](unsigned index) const {
 };
 
 template <typename Element>
-Mat<Element>::Mat(const std::vector<unsigned>& dimensions) : Mat(dimensions, {}) {
+Mat<Element>::Mat(const std::vector<size_type>& dimensions) : Mat(dimensions, {}) {
   this->mElements = std::vector<Element>(this->size(), 0);
 }
 
 template <typename Element>
-Mat<Element>::Mat(const std::vector<unsigned>& dimensions,
+Mat<Element>::Mat(const std::vector<size_type>& dimensions,
     const std::vector<Element>& elements)
     : mElements(elements),
       mDimensions(dimensions),
@@ -193,11 +192,11 @@ Mat<Element> Mat<Element>::operator-(const Mat& other) {
 }
 
 template <typename Element>
-unsigned Mat<Element>::size() const {
+typename Mat<Element>::size_type Mat<Element>::size() const {
   return mSize;
 }
 
 template <typename Element>
-unsigned Mat<Element>::dimension(unsigned index) const {
+typename Mat<Element>::size_type Mat<Element>::dimension(unsigned index) const {
   return mDimensions[index];
 }
