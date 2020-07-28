@@ -7,7 +7,14 @@ project(
 
 set(BIN_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-add_executable(out main.cpp libpng_wrapper.cpp image_file_buffer.cpp)
+add_executable(
+  out
+  main.cpp
+  libpng_wrapper.cpp
+  canny.cpp
+  sobel.cpp
+  harris.cpp
+  grayscale.cpp)
 set_target_properties(out PROPERTIES CXX_STANDARD 17 RUNTIME_OUTPUT_DIRECTORY
                                                      ${BIN_PATH})
 
@@ -16,12 +23,15 @@ include_directories(${PNG_INCLUDE_DIR})
 
 target_link_libraries(out PUBLIC ${PNG_LIBRARY})
 
-# TODO: Find a cross-platform way to enable leak detection
-#target_compile_options(out PUBLIC "-fsanitize=leak")
+# TODO: Find a cross-platform way to enable optimize flags
+target_compile_options(out PUBLIC "-Ofast")
 
 add_executable(
-  testall catch_main.cpp libpng_wrapper.cpp image_file_buffer.cpp test_flatten.cpp test_image.cpp
-          test_image_buffer.cpp test_image_traverser.cpp test_utility.cpp test_mat.cpp)
+  testall
+  catch_main.cpp
+  libpng_wrapper.cpp
+  test_utility.cpp
+  test_mat.cpp)
 set_target_properties(testall PROPERTIES CXX_STANDARD 17
                                          RUNTIME_OUTPUT_DIRECTORY ${BIN_PATH})
 

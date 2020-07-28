@@ -1,5 +1,6 @@
 #pragma once
 #include "mat.hpp"
+#include <cassert>
 
 template <typename E, typename M, typename D>
 class MatViewBase {

@@ -1,27 +1,6 @@
 #pragma once
 #include "mat.hpp"
-
-/**
- * Convolutes a given image with a kernal, and puts into a given buffer.
- *
- * Allows you to control the type of output buffer. In case of out-of-bound
- * pixel access (which will happen with any kernal bigger than 1x1),
- * The mirrored pixels are used. (E.g. image[0][-2] becomes image[0][2])
- *
- *
- * @tparam Image Input image type
- * @tparam Buffer Output buffer type
- *
- * @param img Input image
- * @param kernal Kernal to use for convolution
- * @param buffer output buffer
- *
- * @returns void
- */
-template <typename Image, typename Buffer>
-void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
-                    Buffer &buffer);
-
+#include "img.hpp"
 /**
  * Convolutes a given image with a kernal, returning an Image of the same type.
  *
@@ -30,72 +9,30 @@ void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
  * (E.g. image[0][-2] becomes image[0][2])
  *
  *
- * @tparam Image Input image type
- *
  * @param img Input image
  * @param kernal Kernal to use for convolution
  *
  * @returns The convolved image
  */
-template <typename Image>
-Image convolute(const Image &img, const Mat<double> &kernal);
+template <typename V, typename O = V>
+Mat<O> convolute(const Mat<V>& input, const Mat<double>& kernal) {
+  const auto WIDTH = img::width(input);
+  const auto HEIGHT = img::height(input);
+  const auto CHANNELS = img::channel(input);
 
-/**
- * Convolutes a given image with a kernal, and puts into a given buffer.
- *
- * Allows you to control the type of output buffer. Skips the pixels near
- * the edges, whose convolution require out-of-bound pixel access.
- *
- * @tparam Image Input image type
- * @tparam Buffer Output buffer type
- *
- * @param img Input image
- * @param kernal Kernal to use for convolution
- * @param buffer output buffer
- *
- * @returns void
- */
-template <typename Image, typename Buffer>
-void convoluteToBufferUnchecked(const Image &img, const Mat<double> &kernal,
-                             Buffer &buffer);
-
-/**
- * Convolutes a given image with a kernal, returning an Image of the same type.
- *
- * Skips the pixels near the edges, whose convolution require out-of-bound
- * pixel access.
- *
- *
- * @tparam Image Input image type
- *
- * @param img Input image
- * @param kernal Kernal to use for convolution
- *
- * @returns The convolved image
- */
-template <typename Image>
-Image convoluteUnchecked(const Image &img, const Mat<double> &kernal);
-
-//----------------------- implementations --------------------------------
-template <typename Image, typename Buffer>
-void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
-                    Buffer &buffer) {
-  const auto W = img.width();
-  const auto H = img.height();
-
-  constexpr auto CHANNELS = Image::pixel_t::CHANNELS;
   const auto ROWS = kernal.dimension(0);
   const auto COLS = kernal.dimension(1);
   const auto HALF_ROWS = ROWS / 2;
   const auto HALF_COLS = COLS / 2;
+  Mat<O> output = { { HEIGHT, WIDTH, CHANNELS } };
 
   // If index is over the bound, turn it over the mirror
   const auto adjusted = [](int index, int end) -> int {
     return index > (end - 1) ? 2 * (end - 1) - index : std::abs(index);
   };
-  for (unsigned y = 0; y < img.height(); ++y) {
-    for (unsigned x = 0; x < img.width(); ++x) {
-      for (unsigned channel = 0; channel < CHANNELS; ++channel) {
+  for (unsigned y = 0; y < HEIGHT; ++y) {
+    for (unsigned x = 0; x < WIDTH; ++x) {
+      for (unsigned c = 0; c < CHANNELS; ++c) {
         double sum = 0;
 
         for (int i = (int)y - (int)HALF_ROWS, kernalY = 0;
@@ -103,69 +40,14 @@ void convoluteToBuffer(const Image &img, const Mat<double> &kernal,
           for (int j = (int)x - (int)HALF_COLS, kernalX = 0;
                j <= int(x + HALF_COLS); ++j, ++kernalX) {
             const double channelVal =
-                img[adjusted(i, H)][adjusted(j, W)].get(channel);
+                input[adjusted(i, HEIGHT)][adjusted(j, WIDTH)][c];
             const double kernalVal = kernal[kernalY][kernalX];
             sum += channelVal * kernalVal;
           }
         }
-        buffer[y][x].set(channel, sum);
+        output[y][x][c] = sum;
       }
     }
   }
-}
-
-template <typename Image>
-Image convolute(const Image &img, const Mat<double> &kernal) {
-  const auto W = img.width();
-  const auto H = img.height();
-
-  Image buffer(W, H);
-  convoluteToBuffer(img, kernal, buffer);
-  return buffer;
-}
-
-template <typename Image, typename Buffer>
-void convoluteToBufferUnchecked(const Image &img, const Mat<double> &kernal,
-                             Buffer &buffer) {
-  const auto W = img.width();
-  const auto H = img.height();
-
-  constexpr auto CHANNELS = Image::pixel_t::CHANNELS;
-  const auto ROWS = kernal.dimension(0);
-  const auto COLS = kernal.dimension(1);
-  constexpr auto HALF_ROWS = ROWS / 2;
-  constexpr auto HALF_COLS = COLS / 2;
-
-  const auto outOfBound = [W, H, HALF_ROWS, HALF_COLS](unsigned x,
-                                                       unsigned y) -> bool {
-    return int(x) - int(HALF_COLS) < 0 || int(y) - int(HALF_ROWS) < 0 ||
-           x + HALF_COLS >= W || y + HALF_ROWS >= H;
-  };
-  for (unsigned y = 0; y < img.height(); ++y) {
-    for (unsigned x = 0; x < img.width(); ++x) {
-      if (outOfBound(x, y))
-        continue;
-      for (unsigned channel = 0; channel < CHANNELS; ++channel) {
-        double sum = 0;
-        for (unsigned i = y - HALF_ROWS, kernalY = 0; i <= y + HALF_ROWS;
-             ++i, ++kernalY) {
-          for (unsigned j = x - HALF_COLS, kernalX = 0; j <= x + HALF_COLS;
-               ++j, ++kernalX) {
-            sum += double(img[i][j].get(channel)) * kernal[kernalY][kernalX];
-          }
-        }
-        buffer[y][x].set(channel, sum);
-      }
-    }
-  }
-}
-
-template <typename Image>
-Image convoluteUnchecked(const Image &img, const Mat<double> &kernal) {
-  const auto W = img.width();
-  const auto H = img.height();
-
-  Image buffer(W, H);
-  convoluteToBufferUnchecked(img, kernal, buffer);
-  return buffer;
+  return output;
 }
