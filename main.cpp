@@ -53,6 +53,19 @@ void run(const std::string& filename) {
 void run2(const Mat<uint8_t>& image) {
   auto grayscaledImage = img::grayscale(image);
   img::write(grayscaledImage, "grayscale.png", PNG_COLOR_TYPE_GRAY);
+  auto gauss = img::gaussian(grayscaledImage);
+  img::write(gauss, "gauss.png", PNG_COLOR_TYPE_GRAY);
+  img::write(img::sobel(gauss), "sobel.png", PNG_COLOR_TYPE_GRAY);
+  
+  img::write(img::canny(grayscaledImage, 100, 150), "canny.png", PNG_COLOR_TYPE_GRAY);
+  auto corners = img::harris(grayscaledImage);
+  Mat<uint8_t> harrisOutput = image;
+  for (auto [x, y] : corners) {
+    harrisOutput[y][x][0] = 255;
+    harrisOutput[y][x][1] = 0;
+    harrisOutput[y][x][2] = 0;
+  }
+  img::write(harrisOutput, "harris.png");
 }
 
 int main(int argc, char** argv) {
