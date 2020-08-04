@@ -42,7 +42,7 @@ std::vector<std::pair<unsigned, unsigned>> harris(Mat<uint8_t>& input) {
       const double det = lambda1 * lambda2;
       const double R = det - (0.04 * trace * trace);
 
-      if (R > 10e7) {
+      if (R > 10e6) {
         coordinates.push_back({ x, y });
       }
     }
