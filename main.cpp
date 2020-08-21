@@ -37,6 +37,7 @@ void run(const Mat<uint8_t>& image) {
     harrisOutput[y][x][3] = 255;
   }
   img::write(harrisOutput, "harris.png");
+  img::write(directionMap(gauss), "directions.png", PNG_COLOR_TYPE_RGB_ALPHA);
 }
 
 int main(int argc, char** argv) {

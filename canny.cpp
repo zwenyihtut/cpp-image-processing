@@ -3,7 +3,6 @@
 #include "sobel.hpp"
 #include "utility.hpp"
 
-Mat<uint8_t> canny(Mat<uint8_t>& input, uint8_t min, uint8_t max);
 std::pair<Mat<double>, Mat<double>> findGradients(const Mat<uint8_t>& input) {
   const auto [bufferX, bufferY] = sobelXYGradients(input);
 
@@ -22,6 +21,53 @@ std::pair<Mat<double>, Mat<double>> findGradients(const Mat<uint8_t>& input) {
     }
   }
   return { intensities, directions };
+}
+
+std::array<uint8_t, 4> directionalColor(double intensity, double direction) {
+
+  auto v = static_cast<uint8_t>(std::min(intensity, 255.0));
+  
+  if (v < 100) {
+    return { 0, 0, 0, 255 };
+  }
+  switch (findDirection(direction)) {
+    case Direction::TOP_LEFT:
+      return { 255, 0, 0, 255 };
+    case Direction::TOP:
+      return { 0, 255, 0, 255 };
+    case Direction::TOP_RIGHT:
+      return { 0, 0, 255, 255 };
+    case Direction::RIGHT:
+      return { 0, 255, 255, 255 };
+    case Direction::BOTTOM_RIGHT:
+      return { 255, 0, 255, 255 };
+    case Direction::BOTTOM:
+      return { 255, 255, 0, 255 };
+    case Direction::BOTTOM_LEFT:
+      return { 255, 125, 30, 255 };
+    case Direction::LEFT:
+      return { 30, 125, 255, 255 };
+  }
+  return { 0, 0, 0, 255 };
+}
+
+Mat<uint8_t> directionMap(const Mat<uint8_t>& input) {
+  auto [intensities, directions] = findGradients(input);
+  Mat<uint8_t> output = { { directions.dimension(0), directions.dimension(1),
+                            4 } };
+
+  const auto height = img::height(output);
+  const auto width = img::width(output);
+  for (unsigned y = 0; y < height; ++y) {
+    for (unsigned x = 0; x < width; ++x) {
+      auto [r, g, b, a] = directionalColor(intensities[y][x], directions[y][x]);
+      output[y][x][0] = r;
+      output[y][x][1] = g;
+      output[y][x][2] = b;
+      output[y][x][3] = a;
+    }
+  }
+  return output;
 }
 
 Mat<uint8_t> thinEdges(Mat<double>& intensities, Mat<double>& directions) {
