@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
 #include <functional>
-#include <iostream>
 #include <numeric>
 #include <sstream>
 #include <vector>
@@ -19,6 +18,9 @@ class Mat {
   friend class MatView<Element>;
   friend class ConstMatView<Element>;
   
+  template <typename T>
+  friend class Mat;
+
   using index_t = MatView<Element>;
   using const_index_t = ConstMatView<Element>;
 
@@ -29,6 +31,9 @@ class Mat {
   Mat(const std::vector<size_type>& dimensions);
   Mat(const std::vector<size_type>& dimensions,
       const std::vector<Element>& elements);
+
+  Mat(const std::vector<size_type>& dimensions,
+      const std::function<Element(unsigned)>& generator);
 
   iterator begin() { return this->mElements.begin(); }
   const_iterator cbegin() const { return this->mElements.cbegin(); }
@@ -55,7 +60,15 @@ class Mat {
 
   size_type size() const;
   size_type dimension(unsigned index) const;
-
+  
+  template <typename T>
+  Mat<T> clone() const {
+    Mat<T> cpy(mDimensions, decltype(Mat<T>::mElements){});
+    for (unsigned i = 0; i < mSize; ++i) {
+      cpy.mElements.push_back(T(mElements[i]));
+    }
+    return cpy;
+  }
  private:
   std::vector<Element> mElements;
   std::vector<size_type> mDimensions;
@@ -82,13 +95,14 @@ ConstMatView<E> Mat<E>::operator[](unsigned index) const {
 };
 
 template <typename Element>
-Mat<Element>::Mat(const std::vector<size_type>& dimensions) : Mat(dimensions, {}) {
+Mat<Element>::Mat(const std::vector<size_type>& dimensions)
+    : Mat(dimensions, decltype(mElements)()) {
   this->mElements = std::vector<Element>(this->size(), 0);
 }
 
 template <typename Element>
 Mat<Element>::Mat(const std::vector<size_type>& dimensions,
-    const std::vector<Element>& elements)
+                  const std::vector<Element>& elements)
     : mElements(elements),
       mDimensions(dimensions),
       mOffsetMultipliers(dimensions.size()),
@@ -102,7 +116,17 @@ Mat<Element>::Mat(const std::vector<size_type>& dimensions,
 }
 
 template <typename Element>
-Element Mat<Element>::operator()(std::initializer_list<unsigned> indices) const {
+Mat<Element>::Mat(const std::vector<size_type>& dimensions,
+                  const std::function<Element(unsigned)>& generator)
+    : Mat(dimensions, decltype(mElements)()) {
+  for (unsigned i = 0; i < mSize; ++i) {
+    mElements.push_back(generator(i));
+  }
+}
+
+template <typename Element>
+Element Mat<Element>::operator()(
+    std::initializer_list<unsigned> indices) const {
   assert(indices.size() == mDimensions.size());
   unsigned index = 0;
   unsigned i = 0;
@@ -124,7 +148,8 @@ void Mat<Element>::operator()(unsigned index, const Element& value) {
 }
 
 template <typename Element>
-Mat<Element>& Mat<Element>::operator=(const std::initializer_list<Element>& other) {
+Mat<Element>& Mat<Element>::operator=(
+    const std::initializer_list<Element>& other) {
   assert(mElements.size() == other.size());
   unsigned i = 0;
   for (const auto& v : other) {
@@ -146,7 +171,8 @@ Mat<Element>& Mat<Element>::operator+=(const Mat& other) {
 }
 
 template <typename Element>
-Mat<Element>& Mat<Element>::operator+=(const std::initializer_list<Element>& other) {
+Mat<Element>& Mat<Element>::operator+=(
+    const std::initializer_list<Element>& other) {
   assert(mElements.size() == other.size());
   unsigned i = 0;
   for (const auto& v : other) {
