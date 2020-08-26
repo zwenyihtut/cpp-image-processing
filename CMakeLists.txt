@@ -11,6 +11,7 @@ add_executable(
   out
   main.cpp
   libpng_wrapper.cpp
+  gaussian.cpp
   canny.cpp
   sobel.cpp
   harris.cpp

@@ -19,17 +19,3 @@ Mat<uint8_t> grayscale(const Mat<uint8_t>& image) {
   }
   return output;
 }
-
-Mat<uint8_t> gaussian(const Mat<uint8_t>& image) {
-  Mat<double> rowKernal = { { 1, 5 }, { 0.0625, 0.25, 0.375, 0.25, 0.0625 } };
-  Mat<double> colKernal = { { 5, 1 }, { 0.0625, 0.25, 0.375, 0.25, 0.0625 } };
-
-  Mat<uint8_t> output = image;
-
-  for (int i = 0; i < 1; ++i) {
-    output = convolute(output, rowKernal);
-    output = convolute(output, colKernal);
-  }
-  return output;
-}
-

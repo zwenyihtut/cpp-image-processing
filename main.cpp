@@ -12,11 +12,12 @@ extern "C" {
 #include <unordered_map>
 #include "hhs/logger.h"
 
-#include "grayscale.hpp"
-#include "sobel.hpp"
 #include "canny.hpp"
+#include "gaussian.hpp"
+#include "grayscale.hpp"
 #include "harris.hpp"
 #include "img.hpp"
+#include "sobel.hpp"
 
 void run(const Mat<uint8_t>& image) {
   std::cout << "Height: " << img::height(image) << '\n'
