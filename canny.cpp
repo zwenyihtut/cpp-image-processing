@@ -74,7 +74,7 @@ Mat<uint8_t> thinEdges(Mat<double>& intensities, Mat<double>& directions) {
   const auto height = intensities.dimension(0);
   const auto width = intensities.dimension(1);
 
-  Mat<uint8_t> output = { { height, width } };
+  Mat<uint8_t> output = { { height, width, 1 } };
 
   for (unsigned y = 1; y < height - 1; ++y) {
     for (unsigned x = 1; x < width - 1; ++x) {
@@ -91,9 +91,9 @@ Mat<uint8_t> thinEdges(Mat<double>& intensities, Mat<double>& directions) {
       const auto negIntensity = intensities[y + negY][x + negX];
 
       if (intensity > posIntensity && intensity >= negIntensity) {
-        output[y][x] = std::min(std::round(intensity), 255.0);
+        output[y][x][0] = std::min(std::round(intensity), 255.0);
       } else {
-        output[y][x] = 0;
+        output[y][x][0] = 0;
       }
     }
   }
