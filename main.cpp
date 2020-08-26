@@ -40,6 +40,8 @@ void run(const Mat<uint8_t>& image) {
   img::write(sobel(gauss), "sobel.png", PNG_COLOR_TYPE_GRAY);
   img::write(canny(grayscaledImage, 50, 180), "canny.png", PNG_COLOR_TYPE_GRAY);
   img::write(gaussianXX(grayscaledImage), "gxx.png", PNG_COLOR_TYPE_GRAY);
+  img::write(gaussianYY(grayscaledImage), "gyy.png", PNG_COLOR_TYPE_GRAY);
+  img::write(gaussian2nd(grayscaledImage), "g2.png", PNG_COLOR_TYPE_GRAY);
   img::write(grayscaledImage, "grayscale.png", PNG_COLOR_TYPE_GRAY);
   
 }

@@ -1,5 +1,6 @@
 #include "gaussian.hpp"
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include "convolute.hpp"
 
@@ -13,36 +14,51 @@ Mat<uint8_t> gaussianY(const Mat<uint8_t>& image) {
   return convolute(image, colKernal);
 }
 
+template <typename T>
+void normalize(Mat<T>& mat, T range_beg, T range_end) {
+  T min_val = *std::min_element(mat.begin(), mat.end());
+  T max_val = *std::max_element(mat.begin(), mat.end());
+
+  std::transform(mat.begin(), mat.end(), mat.begin(),
+                 [min_val, max_val, range_beg, range_end](T n) {
+                   return (range_end - range_beg) / (max_val - min_val) *
+                              (n - max_val) +
+                          range_beg;
+                 });
+}
+
 Mat<uint8_t> gaussianXX(const Mat<uint8_t>& image) {
   Mat<double> cpy = image.clone<double>();
-  const auto generator = [](double x) -> double {
-    x -= 3;
-    constexpr double sig = 1;
-
-    return ((x * x / std::pow(sig, 4)) - (1 / std::pow(sig, 2))) *
-           std::exp(-x * x / (2 * std::pow(sig, 2)));
-  };
-  // Mat<double> kernal({ 1, 7 }, generator);
-   Mat<double> kernal({ 1, 7 }, { 0.09, 0.41, 0, -1.0, 0, 0.41, 0.09 });
-  //Mat<double> kernal(
-  //    { 9, 9 },
-  //    { 0, 1, 1, 2, 2, 2,   1,   1,   0, 1, 2, 4, 5, 5,   5,   4,   2,
-  //      1, 1, 4, 5, 3, 0,   3,   5,   4, 1, 2, 5, 3, -12, -24, -12, 3,
-  //      5, 2, 2, 5, 0, -24, -40, -24, 0, 5, 2, 2, 5, 3,   -12, -24, -12,
-  //      3, 5, 2, 1, 4, 5,   3,   0,   3, 5, 4, 1, 1, 2,   4,   5,   5,
-  //      5, 4, 2, 1, 0, 1,   1,   2,   2, 2, 1, 1, 0
-
-  //    });
+  Mat<double> kernal({ 1, 7 }, { 0.09, 0.41, 0, -1.0, 0, 0.41, 0.09 });
   cpy = convolute(cpy, kernal);
-  double min = 1000000.0;
-  double max = -100000.0;
-  for (double n : cpy) {
-    if (min > n) min = n;
-    if (max < n) max = n;
-  }
-  for (double& n : cpy) {
-    n = ((n - min) * 255.0) / (max - min);
-  }
+  normalize<double>(cpy, 0, 255);
+  return cpy.clone<uint8_t>();
+}
+
+Mat<uint8_t> gaussianYY(const Mat<uint8_t>& image) {
+  Mat<double> cpy = image.clone<double>();
+  Mat<double> kernal({ 7, 1 }, { 0.09, 0.41, 0, -1.0, 0, 0.41, 0.09 });
+  cpy = convolute(cpy, kernal);
+  normalize<double>(cpy, 0, 255);
+  return cpy.clone<uint8_t>();
+}
+
+Mat<uint8_t> gaussian2nd(const Mat<uint8_t>& image) {
+  constexpr unsigned KERNAL_SIZE = 7;
+  Mat<double> cpy = image.clone<double>();
+
+  Mat<double> kernal({ KERNAL_SIZE, KERNAL_SIZE },
+                     [KERNAL_SIZE](unsigned i) -> double {
+                       const double x = i % KERNAL_SIZE - 3.0;
+                       const double y = i / KERNAL_SIZE - 3.0;
+                       constexpr double sig = 1.0;
+                       constexpr double k = (-1 / (M_PI * std::pow(sig, 4)));
+
+                       return k * (1 - ((x * x + y * y) / (2 * sig * sig))) *
+                              std::exp(-((x * x + y * y) / (2 * sig * sig)));
+                     });
+  cpy = convolute(cpy, kernal);
+  normalize<double>(cpy, 0, 255);
   return cpy.clone<uint8_t>();
 }
 
