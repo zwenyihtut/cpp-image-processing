@@ -1,6 +1,17 @@
 #pragma once
-#include "mat.hpp"
+#include <limits>
 #include "img.hpp"
+#include "mat.hpp"
+
+
+template <typename T>
+T clamp(T val, T min, T max) {
+  if (val < min) return min;
+  if (val > max) return max;
+  return val;
+}
+
+
 /**
  * Convolutes a given image with a kernal, returning an Image of the same type.
  *
@@ -26,10 +37,11 @@ Mat<O> convolute(const Mat<V>& input, const Mat<double>& kernal) {
   const auto HALF_COLS = COLS / 2;
   Mat<O> output = { { HEIGHT, WIDTH, CHANNELS } };
 
-  // If index is over the bound, turn it over the mirror
-  const auto adjusted = [](int index, int end) -> int {
+  // If index is over the bound, take the mirrored coordinate
+  const auto mirrorIfNeeded = [](int index, int end) -> int {
     return index > (end - 1) ? 2 * (end - 1) - index : std::abs(index);
   };
+
   for (unsigned y = 0; y < HEIGHT; ++y) {
     for (unsigned x = 0; x < WIDTH; ++x) {
       for (unsigned c = 0; c < CHANNELS; ++c) {
@@ -40,10 +52,13 @@ Mat<O> convolute(const Mat<V>& input, const Mat<double>& kernal) {
           for (int j = (int)x - (int)HALF_COLS, kernalX = 0;
                j <= int(x + HALF_COLS); ++j, ++kernalX) {
             const double channelVal =
-                input[adjusted(i, HEIGHT)][adjusted(j, WIDTH)][c];
+                input[mirrorIfNeeded(i, HEIGHT)][mirrorIfNeeded(j, WIDTH)][c];
             const double kernalVal = kernal[kernalY][kernalX];
             sum += channelVal * kernalVal;
           }
+        }
+        if constexpr (std::is_unsigned<O>::value) {
+          sum = clamp<double>(sum, 0, std::numeric_limits<O>::max());
         }
         output[y][x][c] = sum;
       }
@@ -51,3 +66,5 @@ Mat<O> convolute(const Mat<V>& input, const Mat<double>& kernal) {
   }
   return output;
 }
+
+
