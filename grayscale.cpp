@@ -1,6 +1,6 @@
 #include "grayscale.hpp"
-#include "img.hpp"
 #include "convolute.hpp"
+#include "img.hpp"
 
 Mat<uint8_t> grayscale(const Mat<uint8_t>& image) {
   const auto height = img::height(image);

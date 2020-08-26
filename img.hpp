@@ -1,7 +1,6 @@
 #pragma once
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include "libpng_wrapper.hpp"
 #include "mat.hpp"
 #include "utility.hpp"
