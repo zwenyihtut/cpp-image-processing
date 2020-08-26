@@ -3,9 +3,9 @@
 #include <cassert>
 
 template <typename E, typename M, typename D>
-class MatViewBase {
+class MatAccessorBase {
  public:
-  MatViewBase(M& matrix,
+  MatAccessorBase(M& matrix,
               unsigned currentDimension,
               unsigned index,
               unsigned offset)
@@ -28,21 +28,21 @@ class MatViewBase {
 };
 
 template <typename E>
-class MatView : public MatViewBase<E, Mat<E>, MatView<E>> {
+class MatAccessor : public MatAccessorBase<E, Mat<E>, MatAccessor<E>> {
  public:
-  using MatViewBase<E, Mat<E>, MatView<E>>::MatViewBase;
-  MatView& operator=(const E& value);
+  using MatAccessorBase<E, Mat<E>, MatAccessor<E>>::MatAccessorBase;
+  MatAccessor& operator=(const E& value);
 
 };
 
 template <typename E>
-class ConstMatView : public MatViewBase<E, const Mat<E>, ConstMatView<E>> {
+class ConstMatAccessor : public MatAccessorBase<E, const Mat<E>, ConstMatAccessor<E>> {
  public:
-  using MatViewBase<E, const Mat<E>, ConstMatView<E>>::MatViewBase;
+  using MatAccessorBase<E, const Mat<E>, ConstMatAccessor<E>>::MatAccessorBase;
 };
 
 template <typename E, typename M, typename D>
-D MatViewBase<E, M, D>::operator[](unsigned index) {
+D MatAccessorBase<E, M, D>::operator[](unsigned index) {
 #ifndef NDEBUG
   assertRange(index);
 #endif
@@ -52,7 +52,7 @@ D MatViewBase<E, M, D>::operator[](unsigned index) {
 };
 
 template <typename E, typename M, typename D>
-const D MatViewBase<E, M, D>::operator[](unsigned index) const {
+const D MatAccessorBase<E, M, D>::operator[](unsigned index) const {
 #ifndef NDEBUG
   assertRange(index);
 #endif
@@ -63,13 +63,13 @@ const D MatViewBase<E, M, D>::operator[](unsigned index) const {
 };
 
 template <typename E, typename M, typename D>
-MatViewBase<E, M, D>::operator E() const {
+MatAccessorBase<E, M, D>::operator E() const {
   assert(this->mCurrentDimension == this->mMatrix.mDimensions.size() - 1);
   return this->mMatrix.mElements.at(this->mOffset + this->mIndex);
 }
 
 template <typename E>
-MatView<E>& MatView<E>::operator=(const E& value) {
+MatAccessor<E>& MatAccessor<E>::operator=(const E& value) {
   assert(this->mCurrentDimension == this->mMatrix.mDimensions.size() - 1);
   const auto i = this->mOffset + this->mIndex;
   this->mMatrix.mElements.at(i) = value;
@@ -77,7 +77,7 @@ MatView<E>& MatView<E>::operator=(const E& value) {
 }
 
 template <typename E, typename M, typename D>
-void MatViewBase<E, M, D>::assertRange(unsigned index) const {
+void MatAccessorBase<E, M, D>::assertRange(unsigned index) const {
   if (index >= this->mMatrix.dimension(this->mCurrentDimension + 1)) {
     std::ostringstream errText;
     errText << "Out of range access: index = " << index

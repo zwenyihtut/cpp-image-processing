@@ -6,23 +6,24 @@
 #include <vector>
 
 template <typename Element>
-class MatView;
+class MatAccessor;
 template <typename Element>
-class ConstMatView;
+class ConstMatAccessor;
+
 
 template <typename Element>
 class Mat {
  public:
   template <typename E, typename M, typename D>
-  friend class MatViewBase;
-  friend class MatView<Element>;
-  friend class ConstMatView<Element>;
+  friend class MatAccessorBase;
+  friend class MatAccessor<Element>;
+  friend class ConstMatAccessor<Element>;
   
   template <typename T>
   friend class Mat;
 
-  using index_t = MatView<Element>;
-  using const_index_t = ConstMatView<Element>;
+  using index_t = MatAccessor<Element>;
+  using const_index_t = ConstMatAccessor<Element>;
 
   using iterator = typename std::vector<Element>::iterator;
   using const_iterator = typename std::vector<Element>::const_iterator;
@@ -55,8 +56,8 @@ class Mat {
 
   unsigned dimensions() const;
 
-  MatView<Element> operator[](unsigned index);
-  ConstMatView<Element> operator[](unsigned index) const;
+  MatAccessor<Element> operator[](unsigned index);
+  ConstMatAccessor<Element> operator[](unsigned index) const;
 
   size_type size() const;
   size_type dimension(unsigned index) const;
@@ -69,29 +70,29 @@ class Mat {
     }
     return cpy;
   }
- private:
+ protected:
   std::vector<Element> mElements;
   std::vector<size_type> mDimensions;
   std::vector<unsigned> mOffsetMultipliers;
   unsigned mSize;
 };
 
-#include "mat_view.hpp"
+#include "mat_accessor.hpp"
 
 template <typename E>
-MatView<E> Mat<E>::operator[](unsigned index) {
+MatAccessor<E> Mat<E>::operator[](unsigned index) {
   if (index > this->mDimensions[0]) {
     throw std::out_of_range("");
   }
-  return MatView<E>(*this, 0, index, 0);
+  return MatAccessor<E>(*this, 0, index, 0);
 };
 
 template <typename E>
-ConstMatView<E> Mat<E>::operator[](unsigned index) const {
+ConstMatAccessor<E> Mat<E>::operator[](unsigned index) const {
   if (index > this->mDimensions[0]) {
     throw std::out_of_range("");
   }
-  return ConstMatView<E>(*this, 0, index, 0);
+  return ConstMatAccessor<E>(*this, 0, index, 0);
 };
 
 template <typename Element>
