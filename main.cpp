@@ -31,18 +31,17 @@ void run(const Mat<uint8_t>& image) {
     harrisOutput[y][x][0] = 255;
     harrisOutput[y][x][1] = 0;
     harrisOutput[y][x][2] = 0;
-    harrisOutput[y][x][3] = 255;
+    //harrisOutput[y][x][3] = 255;
   }
-
-  img::write(harrisOutput, "harris.png");
-  img::write(directionMap(gauss), "directions.png", PNG_COLOR_TYPE_RGB_ALPHA);
-  img::write(gauss, "gauss.png", PNG_COLOR_TYPE_GRAY);
-  img::write(sobel(gauss), "sobel.png", PNG_COLOR_TYPE_GRAY);
-  img::write(canny(grayscaledImage, 50, 180), "canny.png", PNG_COLOR_TYPE_GRAY);
-  img::write(gaussianXX(grayscaledImage), "gxx.png", PNG_COLOR_TYPE_GRAY);
-  img::write(gaussianYY(grayscaledImage), "gyy.png", PNG_COLOR_TYPE_GRAY);
-  img::write(gaussian2nd(grayscaledImage), "g2.png", PNG_COLOR_TYPE_GRAY);
-  img::write(grayscaledImage, "grayscale.png", PNG_COLOR_TYPE_GRAY);
+  img::write(harrisOutput, "./images/output/harris.png");
+  img::write(directionMap(gauss), "./images/output/directions.png", PNG_COLOR_TYPE_RGB_ALPHA);
+  img::write(gauss, "./images/output/gauss.png", PNG_COLOR_TYPE_GRAY);
+  img::write(sobel(gauss), "./images/output/sobel.png", PNG_COLOR_TYPE_GRAY);
+  img::write(canny(grayscaledImage, 50, 180), "./images/output/canny.png", PNG_COLOR_TYPE_GRAY);
+  img::write(gaussianXX(grayscaledImage), "./images/output/gxx.png", PNG_COLOR_TYPE_GRAY);
+  img::write(gaussianYY(grayscaledImage), "./images/output/gyy.png", PNG_COLOR_TYPE_GRAY);
+  img::write(gaussian2nd(grayscaledImage), "./images/output/g2.png", PNG_COLOR_TYPE_GRAY);
+  img::write(grayscaledImage, "./images/output/grayscale.png", PNG_COLOR_TYPE_GRAY);
   
 }
 

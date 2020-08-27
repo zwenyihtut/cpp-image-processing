@@ -19,8 +19,8 @@ std::vector<std::pair<unsigned, unsigned>> harris(Mat<uint8_t>& input) {
 
       for (unsigned dy = y - 2; dy < y + 2; ++dy) {
         for (unsigned dx = x - 2; dx < x + 2; ++dx) {
-          const auto ix = xIntensities[dy][dx];
-          const auto iy = yIntensities[dy][dx];
+          const auto ix = xIntensities[dy][dx][0];
+          const auto iy = yIntensities[dy][dx][0];
 
           sum += { ix * ix, ix * iy, ix * iy, iy * iy };
         }

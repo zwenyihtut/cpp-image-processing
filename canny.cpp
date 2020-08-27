@@ -14,8 +14,8 @@ std::pair<Mat<double>, Mat<double>> findGradients(const Mat<uint8_t>& input) {
 
   for (unsigned y = 0; y < height; ++y) {
     for (unsigned x = 0; x < width; ++x) {
-      const auto xValue = bufferX[y][x];
-      const auto yValue = bufferY[y][x];
+      const auto xValue = bufferX[y][x][0];
+      const auto yValue = bufferY[y][x][0];
       intensities[y][x] = std::hypot(xValue, yValue);
       directions[y][x] = std::atan2(yValue, xValue);
     }
