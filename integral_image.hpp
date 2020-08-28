@@ -30,8 +30,6 @@ class IntegralImage : public Mat<T> {
     const T c = (y1 == 0 || x0 == 0) ? 0 : (*this)[y1][x0 - 1];
     const T d = (y1 == 0 || x1 == 0) ? 0 : (*this)[y1][x1];
 
-    std::cout << "a: " << a << ", b: " << b << ", c: " << c << ", d: " << d
-              << std::endl;
     return d + a - b - c;
   }
 };
