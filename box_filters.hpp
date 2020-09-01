@@ -19,11 +19,14 @@ class Box {
     std::swap(mCoord.x0, mCoord.y0);
     std::swap(mCoord.x1, mCoord.y1);
   }
+  unsigned area() const {
+    return (mCoord.x1 - mCoord.x0 + 1) * (mCoord.y1 - mCoord.y0 + 1);
+  }
+
  private:
   Coord mCoord;
   int8_t mVal;
 };
-
 
 class BoxFilter {
  public:
