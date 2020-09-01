@@ -93,7 +93,7 @@ BoxFilter makeGaussianBoxFilterXY(unsigned size) {
   return guassianXYFilter;
 }
 
-BoxFilter makeGaussianBoxFilterXX(unsigned size) {
+BoxFilter makeGaussianBoxFilterYY(unsigned size) {
   assert(size % 3 == 0);
   constexpr unsigned REGIONS = 3;
   constexpr unsigned LEFT_REGION_ORIG_WIDTH = 2;
@@ -109,24 +109,24 @@ BoxFilter makeGaussianBoxFilterXX(unsigned size) {
   const unsigned rightRegionWidth = RIGHT_REGION_ORIG_WIDTH + paddingPerRegion;
   const unsigned middleRegionWidth = MID_REGION_ORIG_WIDTH + paddingPerRegion;
 
-  BoxFilter guassianXXFilter;
-  guassianXXFilter.addBox(Box(0, 0, leftRegionWidth - 1, size - 1, 0));
-  guassianXXFilter.addBox(Box(leftRegionWidth, 0,
+  BoxFilter guassianYYFilter;
+  guassianYYFilter.addBox(Box(0, 0, leftRegionWidth - 1, size - 1, 0));
+  guassianYYFilter.addBox(Box(leftRegionWidth, 0,
                               leftRegionWidth + middleRegionWidth - 1,
-                              sizePerRegion - 1, -1));
-  guassianXXFilter.addBox(Box(leftRegionWidth, sizePerRegion,
+                              sizePerRegion - 1, 1));
+  guassianYYFilter.addBox(Box(leftRegionWidth, sizePerRegion,
                               leftRegionWidth + middleRegionWidth - 1,
                               2 * sizePerRegion - 1, -2));
-  guassianXXFilter.addBox(Box(leftRegionWidth, 2 * sizePerRegion,
+  guassianYYFilter.addBox(Box(leftRegionWidth, 2 * sizePerRegion,
                               leftRegionWidth + middleRegionWidth - 1,
-                              3 * sizePerRegion - 1, -1));
-  guassianXXFilter.addBox(
+                              3 * sizePerRegion - 1, 1));
+  guassianYYFilter.addBox(
       Box(leftRegionWidth + middleRegionWidth, 0, size - 1, size - 1, 0));
-  return guassianXXFilter;
+  return guassianYYFilter;
 }
 
-BoxFilter makeGaussianBoxFilterYY(unsigned size) {
-  auto filter = makeGaussianBoxFilterXX(size);
+BoxFilter makeGaussianBoxFilterXX(unsigned size) {
+  auto filter = makeGaussianBoxFilterYY(size);
   filter.transpose();
   return filter;
 }
