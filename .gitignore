@@ -4,3 +4,4 @@ bin/
 *.png
 build/
 test.py
+a.out
