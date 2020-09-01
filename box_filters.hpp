@@ -1,7 +1,6 @@
 #pragma once
-#include <vector>
 #include <cstdint>
-
+#include <vector>
 
 class Box {
  public:
@@ -35,17 +34,24 @@ class BoxFilter {
   typename std::vector<Box>::iterator begin() { return mBoxes.begin(); }
   typename std::vector<Box>::iterator end() { return mBoxes.end(); }
 
-  typename std::vector<Box>::const_iterator begin() const { return mBoxes.begin(); }
+  typename std::vector<Box>::const_iterator begin() const {
+    return mBoxes.begin();
+  }
   typename std::vector<Box>::const_iterator end() const { return mBoxes.end(); }
 
-  typename std::vector<Box>::const_iterator cbegin() const { return mBoxes.cbegin(); }
-  typename std::vector<Box>::const_iterator cend() const { return mBoxes.cend(); }
+  typename std::vector<Box>::const_iterator cbegin() const {
+    return mBoxes.cbegin();
+  }
+  typename std::vector<Box>::const_iterator cend() const {
+    return mBoxes.cend();
+  }
 
   void transpose() {
     for (auto& box : mBoxes) {
       box.transpose();
     }
   }
+
  private:
   std::vector<Box> mBoxes;
 };
